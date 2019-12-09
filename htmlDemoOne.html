@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .all ol li.current {
+            background: #DB192A;
+        }
+
+        #arr {
+            display: none;
+        }
+
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="all" id='box'>
+    <div class="screen"><!--相框-->
+        <ul>
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <ol>
+        </ol>
+    </div>
+    <div id="arr"><span id="left">&lt;</span><span id="right">&gt;</span></div>
+</div>
+
+<script src="JsDemoOne.js"></script>
+<script>
+    //获取最外层盒子
+    var box = getView$("box");
+    //获取相框以及尺寸
+    var screen = box.children[0];
+    var imageWidth = screen.offsetWidth;
+    var imageHeight = screen.offsetHeight;
+    //获取 左右焦点按钮
+    var button = getView$("arr");
+    //获取 ul
+    var image = screen.children[0];
+    //获取 ul 内的 li
+    var liList = image.children;
+    //获取ol
+    var index = screen.children[1];
+
+    var indexNum = 0;
+
+    //创建页码按钮
+    for (i = 0; i < liList.length; i++) {
+        //创建 li 标签
+        var liObj = document.createElement("li");
+        // ol 的 li 标签上 添加 一个自定义属性 来存储索引值
+        liObj.setAttribute("index", i);
+        index.appendChild(liObj);
+        liObj.innerHTML = (i + 1);
+        //注册鼠标进入事件
+        liObj.onmouseover = function () {
+            for (var j = 0; j < index.children.length; j++) {
+                index.children[j].removeAttribute("class");
+            }
+            this.className = "current";
+            //获取当前页码索引值
+            indexNum = this.getAttribute("index");
+            //移动图片
+            animate(image, -indexNum * imageWidth)
+        };
+
+    }
+    //默认第一个有背景色
+    index.children[0].className = "current";
+    //克隆 ul 内的 第一个 li 标签 到 ul 的最后
+    image.appendChild(image.children[0].cloneNode(true));
+    //定时器，自动轮播
+    var timeId = setInterval(function () {
+        clickRightBtn();
+    }, 2000);
+
+    //鼠标进入 box 显示左右焦点
+    box.onmouseover = function () {
+        button.style.display = "block";
+        //进入关闭轮播
+        clearInterval(timeId);
+    };
+    box.onmouseout = function () {
+        button.style.display = "none";
+        //移出继续轮播
+        timeId = setInterval(clickRightBtn, 1500);
+    };
+
+    //点击右侧按钮
+    getView$("right").onclick = clickRightBtn;
+
+    //右侧 按钮点击事假
+    function clickRightBtn() {
+        if (indexNum === liList.length - 1) {
+            indexNum = 0;
+            image.style.left = 0 + "px";
+        }
+
+        indexNum++;
+        //配置界面动画移动
+        animate(image, -indexNum * imageWidth);
+        //底部数字的逻辑
+        if (indexNum === liList.length - 1) {
+            index.children[index.children.length - 1].className = "";
+            index.children[0].className = "current";
+        } else {
+            for (var j = 0; j < index.children.length; j++) {
+                index.children[j].removeAttribute("class");
+            }
+            index.children[indexNum].className = "current";
+        }
+    }
+
+    //左侧按钮点击事件
+    getView$("left").onclick = function () {
+        //配置图片移动逻辑
+        if (indexNum === 0) {
+            indexNum = 5;
+            image.style.left = -indexNum * imageWidth + "px";
+        }
+
+        indexNum--;
+        animate(image, -indexNum * imageWidth);
+
+        //配置文字显示逻辑
+        for (var i = 0; i < index.children.length; i++) {
+            index.children[i].removeAttribute("class");
+        }
+        index.children[indexNum].className = "current";
+    };
+
+
+    //设置任意的一个元素,移动到指定的目标位置
+    function animate(element, target) {
+        clearInterval(element.timeId);
+        //定时器的id值存储到对象的一个属性中
+        element.timeId = setInterval(function () {
+            //获取元素的当前的位置,数字类型
+            var current = element.offsetLeft;
+            //每次移动的距离
+            var step = 10;
+            step = current < target ? step : -step;
+            //当前移动到位置
+            current += step;
+            if (Math.abs(current - target) > Math.abs(step)) {
+                element.style.left = current + "px";
+            } else {
+                //清理定时器
+                clearInterval(element.timeId);
+                //直接到达目标
+                element.style.left = target + "px";
+            }
+        }, 20);
+    }
+
+
+</script>
+</body>
+</html>
+
+
+<!--“俞非凡是你表哥，那你不帮你表哥，你帮安安，这也太奇怪了吧？”-->
+<!--“朋友和亲人可不一样，亲人一出生就注定了，血脉相连，一起成长，彼此熟悉，所以显得亲近-->
+<!--，但是朋友就不一样了，朋友一定是你亲自挑选的，不受任何先天因素的影响，-->
+<!--只看对方合不合拍，你想想，碰到这么一个人，多难啊！”-->
+
+<!--你生活中有没有这样一个或者几个，比亲人还重要的朋友。-->
+<!--我们不能选择什么样的亲人，但是至少在选择朋友的时候。-->
+<!--可以肆无忌惮的捧着真心换真心-->
+<!--朋友比情人更死心塌地，比亲人更懂你脆弱。-->
+
